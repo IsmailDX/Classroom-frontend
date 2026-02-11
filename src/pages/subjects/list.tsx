@@ -43,47 +43,49 @@ const SubjectsList = () => {
       ]
     : [];
 
+    const subjectColumns = useMemo<ColumnDef<Subject>[]>(
+    () => [
+      {
+        id: "code",
+        accessorKey: "code",
+        size: 100,
+        header: () => <p className="column-title ml-2">Code</p>,
+        cell: ({ getValue }) => <Badge>{getValue<string>()}</Badge>,
+      },
+      {
+        id: "name",
+        accessorKey: "name",
+        size: 200,
+        header: () => <p className="column-title">Name</p>,
+        cell: ({ getValue }) => (
+          <span className="text-foreground">{getValue<string>()}</span>
+        ),
+        filterFn: "includesString",
+      },
+      {
+        id: "department",
+        accessorKey: "department.name",
+        size: 150,
+        header: () => <p className="column-title">Department</p>,
+        cell: ({ getValue }) => (
+          <Badge variant="secondary">{getValue<string>()}</Badge>
+        ),
+      },
+      {
+        id: "description",
+        accessorKey: "description",
+        size: 300,
+        header: () => <p className="column-title">Description</p>,
+        cell: ({ getValue }) => (
+          <span className="truncate line-clamp-2">{getValue<string>()}</span>
+        ),
+      },
+    ],
+    []
+  );
+
   const subjectTable = useTable<Subject>({
-    columns: useMemo<ColumnDef<Subject>[]>(
-      () => [
-        {
-          id: "code",
-          accessorKey: "code",
-          size: 100,
-          header: () => <p className="column-title ml-2">Code</p>,
-          cell: ({ getValue }) => <Badge>{getValue<string>()}</Badge>,
-        },
-        {
-          id: "name",
-          accessorKey: "name",
-          size: 200,
-          header: () => <p className="column-title">Name</p>,
-          cell: ({ getValue }) => (
-            <span className="text-foreground">{getValue<string>()}</span>
-          ),
-          filterFn: "includesString",
-        },
-        {
-          id: "department",
-          accessorKey: "department",
-          size: 150,
-          header: () => <p className="column-title">Department</p>,
-          cell: ({ getValue }) => (
-            <Badge variant="secondary">{getValue<string>()}</Badge>
-          ),
-        },
-        {
-          id: "description",
-          accessorKey: "description",
-          size: 300,
-          header: () => <p className="column-title">Description</p>,
-          cell: ({ getValue }) => (
-            <span className="line-clamp-2 truncate">{getValue<string>()}</span>
-          ),
-        },
-      ],
-      [],
-    ),
+    columns: subjectColumns,
     refineCoreProps: {
       resource: "subjects",
       pagination: {
