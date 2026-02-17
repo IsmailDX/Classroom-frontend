@@ -3,6 +3,7 @@ import { UploadWidgetValue } from "@/types";
 import { UploadCloud } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
+// @ts-ignore
 const UploadWidget = ({ value = null, onChange, disabled = false }) => {
   const widgetRef = useRef<CloudinaryWidget | null>(null);
   const onChangeRef = useRef(onChange);
