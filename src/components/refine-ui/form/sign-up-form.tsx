@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import { InputPassword } from '@/components/refine-ui/form/input-password'
 import { Button } from '@/components/ui/button'
+import { UserRole } from '@/types'
 import {
     Card,
     CardContent,
@@ -24,9 +25,11 @@ import {
 } from '@refinedev/core'
 
 export const SignUpForm = () => {
+    const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
+    const [role] = useState<UserRole>(UserRole.STUDENT)
 
     const { open } = useNotification()
 
@@ -50,9 +53,21 @@ export const SignUpForm = () => {
             return
         }
 
+        if (!name.trim()) {
+            open?.({
+                type: 'error',
+                message: 'Name is required',
+                description: 'Please enter your full name.',
+            })
+
+            return
+        }
+
         register({
+            name,
             email,
             password,
+            role,
         })
     }
 
@@ -125,6 +140,18 @@ export const SignUpForm = () => {
                 <CardContent className={cn('px-0')}>
                     <form onSubmit={handleSignUp}>
                         <div className={cn('flex', 'flex-col', 'gap-2')}>
+                            <Label htmlFor="name">Name</Label>
+                            <Input
+                                id="name"
+                                type="text"
+                                placeholder=""
+                                required
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                        </div>
+
+                        <div className={cn('flex', 'flex-col', 'gap-2', 'mt-4')}>
                             <Label htmlFor="email">Email</Label>
                             <Input
                                 id="email"

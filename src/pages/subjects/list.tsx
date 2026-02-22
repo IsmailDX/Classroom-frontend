@@ -1,9 +1,8 @@
-import { CreateButton } from "@/components/refine-ui/buttons/create";
-import { DataTable } from "@/components/refine-ui/data-table/data-table";
-import { Breadcrumb } from "@/components/refine-ui/layout/breadcrumb";
-import { ListView } from "@/components/refine-ui/views/list-view";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useTable } from "@refinedev/react-table";
+import { ColumnDef } from "@tanstack/react-table";
+
 import {
   Select,
   SelectContent,
@@ -11,39 +10,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DEPARTMENT_OPTIONS } from "@/constants";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { ListView } from "@/components/refine-ui/views/list-view";
+import { CreateButton } from "@/components/refine-ui/buttons/create";
+import { Breadcrumb } from "@/components/refine-ui/layout/breadcrumb";
+import { DataTable } from "@/components/refine-ui/data-table/data-table";
+import { ShowButton } from "@/components/refine-ui/buttons/show";
+
 import { Subject } from "@/types";
-import { useTable } from "@refinedev/react-table";
-import { ColumnDef } from "@tanstack/react-table";
-import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { DEPARTMENT_OPTIONS } from "@/constants";
 
-const SubjectsList = () => {
+const SubjectListPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
 
-  const departmentFilters =
-    selectedDepartment === "all"
-      ? []
-      : [
-          {
-            field: "department",
-            operator: "eq" as const,
-            value: selectedDepartment,
-          },
-        ];
-
-  const searchFilter = searchQuery
-    ? [
-        {
-          field: "name",
-          operator: "contains" as const,
-          value: searchQuery,
-        },
-      ]
-    : [];
-
-    const subjectColumns = useMemo<ColumnDef<Subject>[]>(
+  const subjectColumns = useMemo<ColumnDef<Subject>[]>(
     () => [
       {
         id: "code",
@@ -77,12 +59,48 @@ const SubjectsList = () => {
         size: 300,
         header: () => <p className="column-title">Description</p>,
         cell: ({ getValue }) => (
-          <span className="truncate line-clamp-2">{getValue<string>()}</span>
+          <span className="line-clamp-2 truncate">{getValue<string>()}</span>
+        ),
+      },
+      {
+        id: "details",
+        size: 140,
+        header: () => <p className="column-title">Details</p>,
+        cell: ({ row }) => (
+          <ShowButton
+            resource="subjects"
+            recordItemId={row.original.id}
+            variant="outline"
+            size="sm"
+          >
+            View
+          </ShowButton>
         ),
       },
     ],
-    []
+    [],
   );
+
+  const departmentFilters =
+    selectedDepartment === "all"
+      ? []
+      : [
+          {
+            field: "department",
+            operator: "eq" as const,
+            value: selectedDepartment,
+          },
+        ];
+
+  const searchFilters = searchQuery
+    ? [
+        {
+          field: "name",
+          operator: "contains" as const,
+          value: searchQuery,
+        },
+      ]
+    : [];
 
   const subjectTable = useTable<Subject>({
     columns: subjectColumns,
@@ -93,7 +111,8 @@ const SubjectsList = () => {
         mode: "server",
       },
       filters: {
-        permanent: [...departmentFilters, ...searchFilter],
+        // Compose refine filters from the current UI selections.
+        permanent: [...departmentFilters, ...searchFilters],
       },
       sorters: {
         initial: [
@@ -105,10 +124,10 @@ const SubjectsList = () => {
       },
     },
   });
+
   return (
     <ListView>
       <Breadcrumb />
-
       <h1 className="page-title">Subjects</h1>
 
       <div className="intro-row">
@@ -117,13 +136,12 @@ const SubjectsList = () => {
         <div className="actions-row">
           <div className="search-field">
             <Search className="search-icon" />
-
             <Input
               type="text"
-              placeholder="Search by name ..."
+              placeholder="Search by name..."
               className="w-full pl-10"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(event) => setSearchQuery(event.target.value)}
             />
           </div>
 
@@ -132,7 +150,7 @@ const SubjectsList = () => {
               value={selectedDepartment}
               onValueChange={setSelectedDepartment}
             >
-              <SelectTrigger>
+              <SelectTrigger className="">
                 <SelectValue placeholder="Filter by department" />
               </SelectTrigger>
 
@@ -146,7 +164,7 @@ const SubjectsList = () => {
               </SelectContent>
             </Select>
 
-            <CreateButton />
+            <CreateButton resource="subjects" />
           </div>
         </div>
       </div>
@@ -156,4 +174,4 @@ const SubjectsList = () => {
   );
 };
 
-export default SubjectsList;
+export default SubjectListPage;

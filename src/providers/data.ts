@@ -1,46 +1,50 @@
 import { createDataProvider, CreateDataProviderOptions } from "@refinedev/rest";
-import { BACKEND_BASE_URL } from "../constants";
+
 import { CreateResponse, GetOneResponse, ListResponse } from "@/types";
-import { HttpError } from "@refinedev/core";
-
-if (!BACKEND_BASE_URL) {
-  throw new Error("BACKEND_BASE_URL is not defined in environment variables.");
-}
-
-const buildHttpError = async (response: Response): Promise<HttpError> => {
-  let message = "Request failed";
-
-  try {
-    const payload = (await response.json()) as { message?: string };
-
-    if (payload?.message) message = payload.message;
-  } catch (e) {
-    // ignore error
-  }
-
-  return {
-    message,
-    statusCode: response.status,
-  };
-};
+import { BACKEND_BASE_URL } from "@/constants";
 
 const options: CreateDataProviderOptions = {
   getList: {
     getEndpoint: ({ resource }) => resource,
 
     buildQueryParams: async ({ resource, pagination, filters }) => {
-      const page = pagination?.currentPage ?? 1;
-      const pageSize = pagination?.pageSize ?? 10;
+      const params: Record<string, string | number> = {};
 
-      const params: Record<string, string | number> = { page, limit: pageSize };
+      if (pagination?.mode !== "off") {
+        const page = pagination?.currentPage ?? 1;
+        const pageSize = pagination?.pageSize ?? 10;
+
+        params.page = page;
+        params.limit = pageSize;
+      }
 
       filters?.forEach((filter) => {
         const field = "field" in filter ? filter.field : "";
         const value = String(filter.value);
 
+        if (field === "role") {
+          params.role = value;
+        }
+
+        if (resource === "departments") {
+          if (field === "name" || field === "code") params.search = value;
+        }
+
+        if (resource === "users") {
+          if (field === "search" || field === "name" || field === "email") {
+            params.search = value;
+          }
+        }
+
         if (resource === "subjects") {
           if (field === "department") params.department = value;
           if (field === "name" || field === "code") params.search = value;
+        }
+
+        if (resource === "classes") {
+          if (field === "name") params.search = value;
+          if (field === "subject") params.subject = value;
+          if (field === "teacher") params.teacher = value;
         }
       });
 
@@ -48,19 +52,13 @@ const options: CreateDataProviderOptions = {
     },
 
     mapResponse: async (response) => {
-      if (!response.ok) {
-        throw await buildHttpError(response);
-      }
       const payload: ListResponse = await response.json();
       return payload.data ?? [];
     },
 
     getTotalCount: async (response) => {
-      if (!response.ok) {
-        throw await buildHttpError(response);
-      }
       const payload: ListResponse = await response.json();
-      return payload.pagination?.total ?? 0;
+      return payload.pagination?.total ?? payload.data?.length ?? 0;
     },
   },
 
@@ -71,7 +69,7 @@ const options: CreateDataProviderOptions = {
 
     mapResponse: async (response) => {
       const json: CreateResponse = await response.json();
-      return json.data ?? [];
+      return json.data ?? {};
     },
   },
 
